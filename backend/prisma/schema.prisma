@@ -1,0 +1,33 @@
+// Prisma schema — auth example
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  avatarUrl    String?
+  passwordHash String? // null for OAuth-only users (Google/Discord)
+  createdAt    DateTime  @default(now())
+  accounts     Account[]
+}
+
+// Links a third-party OAuth identity to a User. Email/password users have no Account row.
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String // "google" | "discord"
+  providerAccountId String // provider's stable user id (Google sub / Discord id)
+  createdAt         DateTime @default(now())
+
+  @@unique([provider, providerAccountId])
+}
