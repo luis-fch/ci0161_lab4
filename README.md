@@ -115,3 +115,32 @@ Create an application in the Discord Developer Portal. Under OAuth2, add the red
 Kept intentionally minimal: stateless JWT with client-side logout (no refresh tokens), and
 no email verification, password reset, or rate limiting. `expo-secure-store` is native-only,
 so the app targets iOS and Android.
+
+## Images
+
+### Login screen
+
+<img width="1206" height="2622" alt="simulator_screenshot_B44D0C36-23D9-4B6F-83B3-B2B3A0907F25" src="https://github.com/user-attachments/assets/c2a839bd-00db-4a5d-8205-1a02bb212cfb" />
+
+### Signup screen
+
+<img width="1206" height="2622" alt="simulator_screenshot_9C35EBEB-4F1A-48B9-8652-A1339F59BCF6" src="https://github.com/user-attachments/assets/475ebde0-9b21-4973-aad7-f7d6d8410ee3" />
+
+### Error handling examples
+
+<img width="1206" height="2622" alt="simulator_screenshot_2781510C-F2BE-4ADF-AB0D-B37A3168D9C6" src="https://github.com/user-attachments/assets/94b45907-0397-46fe-b091-5f841a632e13" />
+
+<img width="1206" height="2622" alt="simulator_screenshot_2074EC75-DA6B-4FE1-AB88-BE78236DB78D" src="https://github.com/user-attachments/assets/cd5c18bf-2061-4d1e-9906-9c1362a096da" />
+
+
+### Discord OAuth provider
+
+<img width="1206" height="2622" alt="simulator_screenshot_3825215E-8EC6-47E6-BC0A-5B85A6BF31E3" src="https://github.com/user-attachments/assets/794e689c-712f-4de3-918e-01f623e3b6fa" />
+
+### Google OAuth provider
+
+<img width="1206" height="2622" alt="simulator_screenshot_69BDC30E-FCB0-4082-8E05-A0479BF303F4" src="https://github.com/user-attachments/assets/92ad0936-5d23-4aac-adb4-3fa356a80702" />
+
+### Custom auth
+
+<img width="1206" height="2622" alt="simulator_screenshot_5049EDBF-97FB-46AF-A738-0A57FE8CFF3B" src="https://github.com/user-attachments/assets/5e878dee-1d70-422b-bccb-8b92247212e9" />
