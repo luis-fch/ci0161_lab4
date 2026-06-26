@@ -1,15 +1,28 @@
 # backend
 
-To install dependencies:
+The API for the [lab4 auth example](../README.md) — Bun + Express + Prisma + PostgreSQL.
 
-```bash
-bun install
-```
+## Run
 
-To run:
+1. Install dependencies:
 
-```bash
-bun run index.ts
-```
+   ```bash
+   bun install
+   ```
 
-This project was created using `bun init` in bun v1.2.5. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+2. Copy `.env.example` to `.env` and fill in `DATABASE_URL`, `JWT_SECRET`, and the OAuth
+   client values.
+
+3. Create the database tables:
+
+   ```bash
+   bunx prisma db push
+   ```
+
+4. Start the server (runs on http://localhost:3000):
+
+   ```bash
+   bun run index.ts
+   ```
+
+See the [main README](../README.md) for the architecture, endpoints, and OAuth provider setup.
