@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { signSession } from "../lib/jwt";
-import { signupSchema, loginSchema, oauthSchema } from "../schemas";
-import { exchangeAndFetchProfile, OAuthError } from "../lib/oauth";
-import type { Provider } from "../lib/oauth";
+import { signupSchema, loginSchema, googleOAuthSchema, discordOAuthSchema } from "../schemas";
+import { verifyGoogleIdToken, exchangeDiscord, OAuthError } from "../lib/oauth";
+import type { OAuthProfile } from "../lib/oauth";
 import { toSafeUser } from "../lib/user";
 
 const router = Router();
@@ -55,28 +55,31 @@ router.post("/login", async (req, res) => {
   res.json({ token, user: toSafeUser(user) });
 });
 
-// POST /auth/oauth/:provider — exchange a PKCE code and sign in / sign up.
+// POST /auth/oauth/:provider — sign in / sign up via Google or Discord.
+// Google sends an id_token (verified here); Discord sends a PKCE code (exchanged here).
 router.post("/oauth/:provider", async (req, res) => {
   const provider = req.params.provider;
-  if (provider !== "google" && provider !== "discord") {
-    res.status(404).json({ error: "Unknown provider" });
-    return;
-  }
 
-  const parsed = oauthSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
-    return;
-  }
-
-  let profile;
+  let profile: OAuthProfile;
   try {
-    profile = await exchangeAndFetchProfile(
-      provider as Provider,
-      parsed.data.code,
-      parsed.data.codeVerifier,
-      parsed.data.redirectUri,
-    );
+    if (provider === "google") {
+      const parsed = googleOAuthSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
+        return;
+      }
+      profile = await verifyGoogleIdToken(parsed.data.idToken);
+    } else if (provider === "discord") {
+      const parsed = discordOAuthSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
+        return;
+      }
+      profile = await exchangeDiscord(parsed.data.code, parsed.data.codeVerifier, parsed.data.redirectUri);
+    } else {
+      res.status(404).json({ error: "Unknown provider" });
+      return;
+    }
   } catch (err) {
     if (err instanceof OAuthError) {
       res.status(401).json({ error: err.message });
