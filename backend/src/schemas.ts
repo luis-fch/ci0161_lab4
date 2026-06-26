@@ -12,7 +12,13 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-export const oauthSchema = z.object({
+// Google: the app sends a Google ID token, verified server-side.
+export const googleOAuthSchema = z.object({
+  idToken: z.string().min(1),
+});
+
+// Discord: the app sends a PKCE auth code, exchanged server-side.
+export const discordOAuthSchema = z.object({
   code: z.string().min(1),
   codeVerifier: z.string().min(1),
   redirectUri: z.string().min(1),
