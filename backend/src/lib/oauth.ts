@@ -20,61 +20,33 @@ function required(name: string, value: string | undefined): string {
   return value;
 }
 
-// Exchanges an authorization code (obtained by the app via PKCE) for the user's
-// verified profile. Client secrets live here on the backend only.
-export async function exchangeAndFetchProfile(
-  provider: Provider,
-  code: string,
-  codeVerifier: string,
-  redirectUri: string,
-): Promise<OAuthProfile> {
-  return provider === "google"
-    ? exchangeGoogle(code, codeVerifier, redirectUri)
-    : exchangeDiscord(code, codeVerifier, redirectUri);
-}
-
-// Google (OpenID Connect)
-
+// --- Google (OpenID Connect) ---
+// The app signs in with the native iOS client (expo-auth-session) and obtains a
+// Google ID token. We verify its signature + claims against Google's public keys.
+// No client secret is involved. GOOGLE_CLIENT_ID must be the iOS client id, since
+// that is the audience of the tokens the app sends.
 const GOOGLE_JWKS = createRemoteJWKSet(new URL("https://www.googleapis.com/oauth2/v3/certs"));
 
-async function exchangeGoogle(
-  code: string,
-  codeVerifier: string,
-  redirectUri: string,
-): Promise<OAuthProfile> {
+export async function verifyGoogleIdToken(idToken: string): Promise<OAuthProfile> {
   const clientId = required("GOOGLE_CLIENT_ID", env.GOOGLE_CLIENT_ID);
-  const body = new URLSearchParams({
-    grant_type: "authorization_code",
-    code,
-    code_verifier: codeVerifier,
-    redirect_uri: redirectUri,
-    client_id: clientId,
-  });
-  // Only "Web" OAuth clients require a secret; native clients use PKCE alone.
-  if (env.GOOGLE_CLIENT_SECRET) body.set("client_secret", env.GOOGLE_CLIENT_SECRET);
 
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  if (!res.ok) throw new OAuthError(`Google token exchange failed: ${await res.text()}`);
+  let claims;
+  try {
+    const { payload } = await jwtVerify(idToken, GOOGLE_JWKS, {
+      issuer: ["https://accounts.google.com", "accounts.google.com"],
+      audience: clientId,
+    });
+    claims = payload as {
+      sub: string;
+      email?: string;
+      email_verified?: boolean | string;
+      name?: string;
+      picture?: string;
+    };
+  } catch {
+    throw new OAuthError("Invalid Google ID token");
+  }
 
-  const tokens = (await res.json()) as { id_token?: string };
-  if (!tokens.id_token) throw new OAuthError("Google did not return an id_token");
-
-  // Verify the ID token's signature and claims against Google's public keys.
-  const { payload } = await jwtVerify(tokens.id_token, GOOGLE_JWKS, {
-    issuer: ["https://accounts.google.com", "accounts.google.com"],
-    audience: clientId,
-  });
-  const claims = payload as {
-    sub: string;
-    email?: string;
-    email_verified?: boolean | string;
-    name?: string;
-    picture?: string;
-  };
   if (!claims.email) throw new OAuthError("Google account has no email");
 
   return {
@@ -87,9 +59,9 @@ async function exchangeGoogle(
   };
 }
 
-// Discord (OAuth2)
-
-async function exchangeDiscord(
+// --- Discord (OAuth2) ---
+// The app obtains a PKCE auth code; we exchange it here using the client secret.
+export async function exchangeDiscord(
   code: string,
   codeVerifier: string,
   redirectUri: string,
