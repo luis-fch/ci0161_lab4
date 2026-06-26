@@ -113,7 +113,7 @@ export default function Signup() {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 24, gap: 12 },
   title: { fontSize: 28, fontWeight: "700", marginBottom: 8 },
-  error: { color: "#000" },
+  error: { color: "#c00000" },
   field: { gap: 6 },
   label: { fontSize: 14, fontWeight: "600", color: "#333" },
   input: {
